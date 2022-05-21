@@ -1,34 +1,32 @@
 package com.yusufaydin.mobilliumcase.view
 
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.skydoves.landscapist.glide.GlideImage
+import coil.compose.rememberImagePainter
 import com.yusufaydin.mobilliumcase.R
 import com.yusufaydin.mobilliumcase.model.Doctor
 import com.yusufaydin.mobilliumcase.viewmodel.DoctorListViewModel
-import kotlinx.coroutines.coroutineScope
 
 
 @Composable
@@ -48,9 +46,6 @@ fun DoctorListScreen(
                     .padding(15.dp)
             ) {
                 viewModel.searchDoctorList(it)
-                if(viewModel.initialDoctorList.isEmpty()){
-
-                }
             }
             CheckGender(modifier = Modifier.padding(15.dp))
             DoctorList(navController = navController)
@@ -120,34 +115,56 @@ fun CheckGender(modifier: Modifier = Modifier) {
                 checked = checkedStateFemale.value,
                 onCheckedChange = {
                     checkedStateFemale.value = it
-                    checkedStateMale.value = !it
+                    if (checkedStateFemale.value) {
+                        checkedStateMale.value = !it
+                    }
+
                 },
                 modifier = Modifier.padding(10.dp)
             )
 
             Text(
                 text = "Kadın",
-                modifier = Modifier.padding(top = 12.dp, start = 5.dp),
+                modifier = Modifier
+                    .padding(top = 12.dp, start = 5.dp)
+                    .weight(1f),
                 fontSize = 16.sp
             )
-            Spacer(modifier = Modifier.width(65.dp))
 
             Checkbox(
                 checked = checkedStateMale.value,
                 onCheckedChange = {
                     checkedStateMale.value = it
-                    checkedStateFemale.value = !it
+                    if (checkedStateMale.value) {
+                        checkedStateFemale.value = !it
+                    }
+
                 },
                 modifier = Modifier.padding(10.dp)
             )
 
             Text(
                 text = "Erkek",
-                modifier = Modifier.padding(top = 12.dp, start = 5.dp),
+                modifier = Modifier
+                    .padding(top = 12.dp, start = 5.dp)
+                    .weight(1f),
                 fontSize = 16.sp
             )
         }
     }
+}
+
+@Composable
+fun EmptyList() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(painter = painterResource(id = R.drawable.ic_person), contentDescription = null)
+        Text(text = "Kullanıcı Bulunamadı.", fontSize = 20.sp)
+    }
+
 }
 
 @Composable
@@ -159,15 +176,26 @@ fun DoctorList(
     val errorMessage by remember { viewModel.errorMessage }
     val isLoading by remember { viewModel.isLoading }
 
-    DoctorListView(doctors = doctorList, navController = navController)
+    if (viewModel.doctorList.value.isEmpty()) {
+        if(!isLoading){
+            EmptyList()
+        }
+    } else {
+        DoctorListView(doctors = doctorList, navController = navController)
+    }
 
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
         if (isLoading) {
             CircularProgressIndicator(color = Color.Blue)
         }
         if (errorMessage.isNotEmpty()) {
             RetryView(error = errorMessage) {
-                //viewModel.downloadDoctors()
+                viewModel.downloadDoctors()
             }
         }
     }
@@ -177,36 +205,63 @@ fun DoctorList(
 fun DoctorListView(doctors: List<Doctor>, navController: NavController) {
     LazyColumn(contentPadding = PaddingValues(5.dp)) {
         items(doctors) { doctor ->
-            DoctorRow(navController = navController, doctor = doctor)
+            DoctorRow(
+                navController = navController,
+                doctor = doctor,
+                modifier = Modifier.padding(start = 6.dp, end = 6.dp)
+            )
         }
     }
 }
 
+
 @Composable
-fun DoctorRow(navController: NavController, doctor: Doctor) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = Color.White)
-            .clickable {
-                navController.navigate(
-                    "doctor_detail_screen/${doctor.fullName}/${doctor.userStatus}/${doctor.image}"
-                )
-            }
-    ) {
-        GlideImage(
-            imageModel = doctor.image.url
-        )
+fun DoctorRow(
+    navController: NavController, doctor: Doctor,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .clickable {
+                    navController.navigate(
+                        "doctor_detail_screen/${doctor.fullName}/${doctor.userStatus}/${doctor.image}"
+                    )
+                }
+        ) {
+            Image(
+                painter = rememberImagePainter(data = doctor.image.url),
+                contentDescription = doctor.fullName,
+                modifier = modifier
+                    .padding(start = 10.dp, top = 10.dp, bottom = 10.dp)
+                    .size(75.dp, 75.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, Color.Gray, CircleShape)
+            )
 
-        Text(
-            text = doctor.fullName,
-            style = MaterialTheme.typography.h4,
-            modifier = Modifier.padding(2.dp),
-            color = MaterialTheme.colors.primary
+            Text(
+                text = doctor.fullName,
+                modifier = modifier
+                    .padding(2.dp)
+                    .weight(1f),
+                color = Color.Gray,
+                fontSize = 20.sp
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.ic_forward), contentDescription = null,
+                modifier = modifier.padding(end = 5.dp)
+            )
+        }
+        Divider(
+            color = Color.LightGray,
+            thickness = 1.dp,
+            modifier = modifier.padding(start = 5.dp, end = 5.dp)
         )
-
     }
 }
+
 
 @Composable
 fun RetryView(
@@ -218,7 +273,7 @@ fun RetryView(
         Spacer(modifier = Modifier.height(10.dp))
         Button(onClick = {
             onRetry
-        }, modifier = Modifier.align(Alignment.CenterHorizontally)){
+        }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
             Text(text = "Retry")
         }
     }

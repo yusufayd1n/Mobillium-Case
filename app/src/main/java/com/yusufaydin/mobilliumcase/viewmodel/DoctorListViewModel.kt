@@ -58,7 +58,7 @@ class DoctorListViewModel @Inject constructor(
         }
     }
 
-    suspend fun downloadDoctors() {
+     fun downloadDoctors() {
         viewModelScope.launch {
             isLoading.value = true
             val result = repository.getDoctorList()
