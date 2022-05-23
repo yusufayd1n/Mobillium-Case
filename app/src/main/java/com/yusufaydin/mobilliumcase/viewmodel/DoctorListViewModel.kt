@@ -1,11 +1,9 @@
 package com.yusufaydin.mobilliumcase.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yusufaydin.mobilliumcase.model.Doctor
-import com.yusufaydin.mobilliumcase.model.DoctorModel
 import com.yusufaydin.mobilliumcase.repository.DoctorRepository
 import com.yusufaydin.mobilliumcase.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +19,7 @@ class DoctorListViewModel @Inject constructor(
     var doctorList = mutableStateOf<List<Doctor>>(listOf())
     var errorMessage = mutableStateOf("")
     var isLoading = mutableStateOf(false)
+    var gender = ""
 
     var initialDoctorList = listOf<Doctor>()
     var isSearchStarting = true
@@ -32,11 +31,12 @@ class DoctorListViewModel @Inject constructor(
     }
 
     fun searchDoctorList(query: String) {
-        val listToSearch = if (isSearchStarting) {
-            doctorList.value
-        } else {
-            initialDoctorList
-        }
+        val listToSearch =
+            if (isSearchStarting) {
+                doctorList.value
+            } else {
+                initialDoctorList
+            }
 
         viewModelScope.launch(Dispatchers.Default) {
             if (query.isEmpty()) {
@@ -45,9 +45,16 @@ class DoctorListViewModel @Inject constructor(
                 return@launch
             }
 
-            val results = listToSearch.filter {
-                //it.gender.equals(gender)
-                it.fullName.contains(query.trim(), ignoreCase = true)
+            val results = if (gender == "") {
+                listToSearch.filter { doctors ->
+                    doctors.fullName.contains(query.trim(), ignoreCase = true)
+                }
+            } else {
+                listToSearch.filter { doctors ->
+                    doctors.gender.equals(gender)
+                        .and(doctors.fullName.contains(query.trim(), ignoreCase = true))
+                }
+
             }
 
             if (isSearchStarting) {
@@ -58,7 +65,7 @@ class DoctorListViewModel @Inject constructor(
         }
     }
 
-     fun downloadDoctors() {
+    fun downloadDoctors() {
         viewModelScope.launch {
             isLoading.value = true
             val result = repository.getDoctorList()

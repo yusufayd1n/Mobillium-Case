@@ -27,7 +27,8 @@ import coil.compose.rememberImagePainter
 import com.yusufaydin.mobilliumcase.R
 import com.yusufaydin.mobilliumcase.model.Doctor
 import com.yusufaydin.mobilliumcase.viewmodel.DoctorListViewModel
-
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun DoctorListScreen(
@@ -96,7 +97,7 @@ fun SearchBar(
 }
 
 @Composable
-fun CheckGender(modifier: Modifier = Modifier) {
+fun CheckGender(modifier: Modifier = Modifier, viewModel: DoctorListViewModel = hiltViewModel()) {
     Box(modifier = modifier) {
         Row(
             modifier = Modifier
@@ -115,6 +116,7 @@ fun CheckGender(modifier: Modifier = Modifier) {
                 checked = checkedStateFemale.value,
                 onCheckedChange = {
                     checkedStateFemale.value = it
+                    viewModel.gender = "female"
                     if (checkedStateFemale.value) {
                         checkedStateMale.value = !it
                     }
@@ -135,6 +137,7 @@ fun CheckGender(modifier: Modifier = Modifier) {
                 checked = checkedStateMale.value,
                 onCheckedChange = {
                     checkedStateMale.value = it
+                    viewModel.gender = "male"
                     if (checkedStateMale.value) {
                         checkedStateFemale.value = !it
                     }
@@ -177,7 +180,7 @@ fun DoctorList(
     val isLoading by remember { viewModel.isLoading }
 
     if (viewModel.doctorList.value.isEmpty()) {
-        if(!isLoading){
+        if (!isLoading) {
             EmptyList()
         }
     } else {
@@ -227,7 +230,12 @@ fun DoctorRow(
                 .background(Color.White)
                 .clickable {
                     navController.navigate(
-                        "doctor_detail_screen/${doctor.fullName}/${doctor.userStatus}/${doctor.image}"
+                        "doctor_detail_screen/${doctor.fullName}/${doctor.userStatus}/${
+                            URLEncoder.encode(
+                                doctor.image.url,
+                                StandardCharsets.UTF_8.toString()
+                            )
+                        }"
                     )
                 }
         ) {
