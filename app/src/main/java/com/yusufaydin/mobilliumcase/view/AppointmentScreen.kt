@@ -13,7 +13,6 @@ import androidx.navigation.NavController
 
 @Composable
 fun AppointmentScreen(
-    navController: NavController,
     userStatus: String
 ) {
     Surface(

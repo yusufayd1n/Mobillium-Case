@@ -76,7 +76,6 @@ class MainActivity : ComponentActivity() {
                             it.arguments?.getString("userStatus")
                         }
                         AppointmentScreen(
-                            navController = navController,
                             userStatus = userStatus ?: ""
                         )
 

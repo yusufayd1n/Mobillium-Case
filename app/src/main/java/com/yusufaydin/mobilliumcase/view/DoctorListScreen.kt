@@ -116,11 +116,13 @@ fun CheckGender(modifier: Modifier = Modifier, viewModel: DoctorListViewModel = 
                 checked = checkedStateFemale.value,
                 onCheckedChange = {
                     checkedStateFemale.value = it
-                    viewModel.gender = "female"
+                    viewModel.filterDoctorList("female")
                     if (checkedStateFemale.value) {
                         checkedStateMale.value = !it
                     }
-
+                    if (!checkedStateFemale.value && !checkedStateMale.value) {
+                        viewModel.filterDoctorList("")
+                    }
                 },
                 modifier = Modifier.padding(10.dp)
             )
@@ -137,9 +139,12 @@ fun CheckGender(modifier: Modifier = Modifier, viewModel: DoctorListViewModel = 
                 checked = checkedStateMale.value,
                 onCheckedChange = {
                     checkedStateMale.value = it
-                    viewModel.gender = "male"
+                    viewModel.filterDoctorList("male")
                     if (checkedStateMale.value) {
                         checkedStateFemale.value = !it
+                    }
+                    if (!checkedStateFemale.value && !checkedStateMale.value) {
+                        viewModel.filterDoctorList("")
                     }
 
                 },
@@ -153,9 +158,11 @@ fun CheckGender(modifier: Modifier = Modifier, viewModel: DoctorListViewModel = 
                     .weight(1f),
                 fontSize = 16.sp
             )
+
         }
     }
 }
+
 
 @Composable
 fun EmptyList() {
